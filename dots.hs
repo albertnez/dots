@@ -1,9 +1,11 @@
 import System.Random
 
--- Our board. Hor. lines, Ver. lines and cells
+-- ### Board ### 
+-- created with values for "Horitzontal lines" "Vertiacal lines" and "cells"
 data Board = Board [[Int]] [[Int]] [[Int]]
 
--- Aux show functions
+-- ###Show functions###
+-- Show Horizontal
 showHor :: [Int] -> String
 showHor [] = "."
 showHor (a:as)
@@ -11,22 +13,25 @@ showHor (a:as)
   | a == 1 = ".===" ++ showHor as
   | otherwise = ".***" ++ showHor as
 
+-- Show Cell
 showCell :: Int -> String
 showCell 0 = "   "
 showCell n = " " ++ show n ++ " "
 
+-- Show vertical wall
 showVerWall :: Int -> String
 showVerWall 0 = " "
 showVerWall 1 = "="
 showVerWall 2 = "*"
 
+-- Show vertical
 showVer :: [Int] -> [Int] -> Int -> String
 showVer [] _ _ = ""
 showVer (a:as) bs 0 = showVerWall a ++ showVer bs as 1
 showVer (a:as) bs 1 = showCell a ++ showVer bs as 0
 
 instance Show Board where
-  show b = f b 0 -- 0 is hor, 1 is ver
+  show b = f b 0 -- will use 0 as Horizontal, 1 as Vertical
     where
       f (Board hor ver cells) t
         | t == 0 && hor == [] = ""
@@ -49,11 +54,11 @@ readMove s
 
 type Pos = (Int, Int)
 
--- Aux functions
+-- ##Aux functions##
 createEmptyMatrix :: Int -> Int -> [[Int]]
 createEmptyMatrix n m = [[0 | j <- [1..m]] | i <- [1..n]]
 
--- Board stuff
+-- ###Board stuff###
 -- Creates an empty board of n by m dots
 createEmptyBoard :: Int -> Int -> Board
 
@@ -106,7 +111,7 @@ updateBoardCell b@(Board hor ver cells) (i,j) p
     lines = [valueAt hor (i,j), valueAt hor (i+1,j),
              valueAt ver (i,j), valueAt ver (i,j+1)]
 
--- Aux function to update all cells with player p
+-- Update all cells with player p
 updateBoardCells :: Board -> Int -> Board
 updateBoardCells b@(Board hor ver cells) p = foldl f b positions
   where
@@ -114,7 +119,7 @@ updateBoardCells b@(Board hor ver cells) p = foldl f b positions
     positions = [(i,j) | i <- [0..length cells -1],
                          j <- [0..length (cells!!0) -1]]
 
--- Aux function to count number of lines in a cell
+-- Count number of lines in a cell
 numberLinesCell :: Board -> Pos -> Int
 numberLinesCell (Board hor ver cells) (i,j) = (f $ valueAt hor (i+1,j)) +
   (f $ valueAt hor (i,j)) + (f $ valueAt ver (i,j)) + (f $ valueAt ver (i,j+1))
@@ -133,6 +138,7 @@ applyMove (Board hor ver cells) (Ver pos) p
 fullBoard :: Board -> Bool
 fullBoard (Board hor ver cells) = any (elem 0) cells
 
+-- Turn implementation
 makeTurn :: Board -> Strategy -> Int -> IO Board
 makeTurn board str p = do
   move <- str board
@@ -144,9 +150,9 @@ countFreeCells :: Board -> Int
 countFreeCells (Board hor ver cells) = foldl f 0 cells
   where
     f n list = n + (length $ filter (== 0) list)
--- End Board stuff
+-- ###End Board stuff###
 
--- Strategy Stuff
+-- ###Strategy Stuff###
 type Strategy = Board -> IO Move
 
 -- Dumb AI - Just take the first available move
@@ -195,17 +201,16 @@ intelligentStrategy board
     normalMoves = filter (\x -> not $ adjCellsLines board x 2) moves
     goodMoves = filter (\x -> adjCellsLines board x 3) moves
 
--- Human
+-- Human Strategy
 humanStrategy :: Board -> IO Move
 humanStrategy board = do
   putStrLn "please, make a valid move (ver i j | hor i j)"
   line <- getLine
   let move = readMove line
   return (move)
--- End strategy stuff
+-- ###End strategy stuff###
 
-
--- Part of Game Stuff. Turn is either 0 or 1
+-- Turn is either 0 or 1
 gameTurn :: Board -> (Int,Int) -> Int -> Strategy -> Strategy -> IO (Int,Int)
 gameTurn board (s1,s2) turn str1 str2 = do
   --move <- str1 board p
@@ -231,7 +236,7 @@ gameTurn board (s1,s2) turn str1 str2 = do
       then do gameTurn newBoard (s1+scoreMade,s2) turn str1 str2
       else do gameTurn newBoard (s2,s1) (1-turn) str2 str1
 
-
+-- ### Game ###
 game :: Board -> Strategy -> Strategy -> IO ()
 game board str1 str2 = do
   putStrLn (show board)
@@ -241,16 +246,18 @@ game board str1 str2 = do
     else do putStrLn $ "Player " ++ ((\(x,y) -> if x > y then "1" else "2") score) ++ " wins!"
   putStrLn $ "Final score:  " ++ (show $ fst score) ++ ", " ++ (show $ snd score)
   return ()
--- End of game
+-- ###End of game###
 
--- Game setter
+-- ###Game setter###
 -- Select an AI
 selectAI :: Int -> Strategy
 selectAI 1 = dumbStrategy
 selectAI 2 = randStrategy
 selectAI 3 = intelligentStrategy
 selectAI 4 = humanStrategy
+-- #### End Game setter###
 
+-- ### IO functions ###
 initGame :: IO ()
 initGame = do
   putStrLn "Dots! Join the dots to close the squares!"
@@ -293,6 +300,10 @@ validArgs s = all isNum words && length words == 2
 
 parseArgs :: String -> [Int]
 parseArgs s = map (read) $ splitWords s
+-- ### end IO functions ###
 
+-- ### MAIN ###
 main :: IO ()
 main = initGame
+
+-- Have fun <3
